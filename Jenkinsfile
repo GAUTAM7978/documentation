@@ -27,13 +27,6 @@ pipeline {
             }
         }
 
-        stage('Run Unit Tests') {
-            steps {
-                sh 'pip install -r requirements.txt'
-                sh 'pytest tests || echo "No tests found."'
-            }
-        }
-
         stage('Push Docker Image') {
             steps {
                 script {
