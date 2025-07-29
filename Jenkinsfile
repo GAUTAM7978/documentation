@@ -8,7 +8,7 @@ environment {
 }
 
 stages {
-    stages {
+    
         stage('Checkout') {
             steps {
                 git branch: 'main', 
@@ -16,7 +16,6 @@ stages {
                     credentialsId: 'Gautam_01/******'
             }
         }
-    }
 
 
     stage('Build Docker Image') {
