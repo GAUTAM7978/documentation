@@ -1,0 +1,9 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: my-app-config
+  namespace: my-app-service
+data:
+  APP_ENV: production
+  APP_PORT: "8080"
+
