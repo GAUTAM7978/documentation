@@ -5,7 +5,7 @@ pipeline {
     environment {
         IMAGE_NAME = "gautam6969/myip"
         DOCKER_CREDS = credentials('dockerid')  // Docker Hub credentials
-        GIT_CREDS = 'github-token'  // Corrected Git credentials ID (no slash)
+        GIT_CREDS = credentials('github-token')  // Use credentials() for Git token
     }
 
     stages {
@@ -14,7 +14,7 @@ pipeline {
                 git(
                     branch: 'main',
                     url: 'https://github.com/GAUTAM7978/documentation.git',
-                    credentialsId: "${GIT_CREDS}"
+                    credentialsId: 'github-token'
                 )
             }
         }
@@ -27,12 +27,11 @@ pipeline {
             }
         }
 
-        stage('Push Docker Image') {
+       stage('Login to Docker Hub & Push') {
             steps {
-                script {
-                    docker.withRegistry('https://index.docker.io/v1/', DOCKER_CREDS) {
-                        dockerImage.push("latest")
-                    }
+                withCredentials([usernamePassword(credentialsId: 'dockerid', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
+                    sh "echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin"
+                    sh "docker push ${IMAGE_NAME}:latest"
                 }
             }
         }
@@ -41,8 +40,8 @@ pipeline {
             steps {
                 script {
                     sh 'kubectl apply -f k8s/deploy.yaml'
-                    sh 'kubectl apply -f k8s/service.yml'
-                    sh 'kubectl apply -f k8s/config.yml'
+                    sh 'kubectl apply -f k8s/service.yaml'
+                    sh 'kubectl apply -f k8s/config.yaml'
                 }
             }
         }
