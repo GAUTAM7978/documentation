@@ -53,8 +53,9 @@ pipeline {
                         export KUBECONFIG=/var/lib/jenkins/.kube/config
                         echo "Using context: $(kubectl config current-context)"
                         kubectl config use-context minikube
-                        kubectl set image deployment/my-app my-app=${DOCKER_IMAGE}:${BUILD_NUMBER} -n default || \
-                        kubectl apply -f k8s/
+
+                        cd /home/ubuntu/myip/k8s
+                        kubectl apply -f deploy.yaml
                     '''
                 }
             }
