@@ -1,4 +1,3 @@
-
 pipeline {
     agent any
 
@@ -27,7 +26,7 @@ pipeline {
             }
         }
 
-       stage('Login to Docker Hub & Push') {
+        stage('Login to Docker Hub & Push') {
             steps {
                 withCredentials([usernamePassword(credentialsId: 'dockerid', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
                     sh "echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin"
@@ -42,6 +41,21 @@ pipeline {
                     sh 'kubectl apply -f k8s/deploy.yaml'
                     sh 'kubectl apply -f k8s/service.yaml'
                     sh 'kubectl apply -f k8s/config.yaml'
+                }
+            }
+        }
+
+        stage('Deploy to Minikube') {
+            steps {
+                script {
+                    sh '''
+                        set -e
+                        export KUBECONFIG=/var/lib/jenkins/.kube/config
+                        echo "Using context: $(kubectl config current-context)"
+                        kubectl config use-context minikube
+                        kubectl set image deployment/my-app my-app=${DOCKER_IMAGE}:${BUILD_NUMBER} -n default || \
+                        kubectl apply -f k8s/
+                    '''
                 }
             }
         }
