@@ -4,8 +4,8 @@ pipeline {
 
     environment {
         IMAGE_NAME = "gautam6969/myip"
-        DOCKER_CREDS = credentials('gautam6969')  // Docker Hub credentials
-        GIT_CREDS = 'Gautam_01'  // Corrected Git credentials ID (no slash)
+        DOCKER_CREDS = credentials('dockerid')  // Docker Hub credentials
+        GIT_CREDS = 'github-token'  // Corrected Git credentials ID (no slash)
     }
 
     stages {
