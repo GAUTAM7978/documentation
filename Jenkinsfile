@@ -39,8 +39,8 @@ pipeline {
             steps {
                 script {
                     sh 'kubectl apply -f k8s/deploy.yaml'
-                    sh 'kubectl apply -f k8s/service.yaml'
-                    sh 'kubectl apply -f k8s/config.yaml'
+                    sh 'kubectl apply -f k8s/service.yml'
+                    sh 'kubectl apply -f k8s/config.yml'
                 }
             }
         }
