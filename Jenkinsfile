@@ -1,62 +1,55 @@
+@Library('my-shared-lib') _
+
 pipeline {
     agent any
 
     environment {
-        IMAGE_NAME = "gautam6969/myip"
-        DOCKER_CREDS = credentials('dockerid')  // Docker Hub credentials
-        GIT_CREDS = credentials('github-token')  // Use credentials() for Git token
+        IMAGE_NAME   = "gautam6969/myip"
+        DOCKER_CREDS = 'dockerid'
+        GIT_CREDS    = 'glpat-d7kNm_9tjKAHzqePraVdr286MQp1OmhmZXh5Cw.01.12071rg0v'
+        GCP_CREDS    = 'gcp-service-account'
+        PROJECT_ID   = "cloud-deployment-468004"
+        CLUSTER_NAME = "my-gke-cluster"
+        CLUSTER_ZONE = "us-central1-a"
     }
 
     stages {
         stage('Checkout') {
             steps {
-                git(
-                    branch: 'main',
-                    url: 'https://github.com/GAUTAM7978/documentation.git',
-                    credentialsId: 'github-token'
-                )
+                git branch: 'main',
+                    url: 'https://gitlab.com/GAUTAM7978/jenkins-shared-lib.git',
+                    credentialsId: "${GIT_CREDS}"
             }
         }
 
         stage('Build Docker Image') {
             steps {
                 script {
-                    dockerImage = docker.build("${IMAGE_NAME}:latest")
+                    dockerImage = buildDocker(IMAGE_NAME)
                 }
             }
         }
 
-        stage('Login to Docker Hub & Push') {
-            steps {
-                withCredentials([usernamePassword(credentialsId: 'dockerid', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
-                    sh "echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin"
-                    sh "docker push ${IMAGE_NAME}:latest"
-                }
-            }
-        }
-
-        stage('Deploy') {
+        stage('Login & Push Docker Image') {
             steps {
                 script {
-                    sh 'kubectl apply -f k8s/deploy.yaml'
-                    sh 'kubectl apply -f k8s/service.yml'
-                    sh 'kubectl apply -f k8s/config.yml'
+                    pushDocker(IMAGE_NAME, DOCKER_CREDS)
                 }
             }
         }
 
-        stage('Deploy to Minikube') {
+        stage('Authenticate to GKE') {
             steps {
                 script {
-                    sh '''
-                        set -e
-                        export KUBECONFIG=/var/lib/jenkins/.kube/config
-                        echo "Using context: $(kubectl config current-context)"
-                        kubectl config use-context minikube
+                    authenticateGKE(PROJECT_ID, CLUSTER_NAME, CLUSTER_ZONE, GCP_CREDS)
+                }
+            }
+        }
 
-                        cd /home/ubuntu/myip/k8s
-                        kubectl apply -f deploy.yaml
-                    '''
+        stage('Deploy to GKE') {
+            steps {
+                script {
+                    deployToK8s('k8s')
                 }
             }
         }
@@ -64,7 +57,7 @@ pipeline {
 
     post {
         success {
-            echo '✅ Pipeline completed successfully!'
+            echo '✅ Pipeline completed successfully on GKE!'
         }
         failure {
             echo '❌ Pipeline failed.'
